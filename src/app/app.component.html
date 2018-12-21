@@ -10,7 +10,7 @@
         </div>
       <ul class="nav nav-pills nav-stacked">
         <li *ngFor="let test of diag | titlefilter:search.title" [ngClass]="currentTest === test ? 'active' : ''">
-          <a href="#" (click)="currentTest = test">{{test.title}} <span class="label label-danger">{{test.executionTime}} ms</span></a>
+          <a href="#" (click)="setCurrentTest(test)">{{test.title}} <span class="label label-danger">{{test.executionTime}} ms</span></a>
         </li>
       </ul><br>
     </div>
