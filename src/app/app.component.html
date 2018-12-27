@@ -1,8 +1,18 @@
 <div class="container-fluid">
   <div class="row content">
     <div class="col-sm-3 sidenav">
-       <div class="input-group o7">
-          <input type='file' class="form-control" accept='text/json' (change)='openFile($event)'>
+      <div class="input-group">
+          <h4><small>DDF Query <a (click)="ddfQueryVisible = !ddfQueryVisible" href="#"><span class="label label-danger">{{ddfQueryVisible ? '-' : '+'}}</span></a></small></h4>
+          <div *ngIf="ddfQueryVisible">
+              <input type="text" [(ngModel)] ="search.host" class="form-control" style="width: 300px;" placeholder="WS Host...">
+              <textarea [(ngModel)] ="search.query" class="form-control" style="width: 300px; height: 300px;"></textarea><br>
+              <button *ngIf="!loading" (click)="ddfRequest()" type="button" class="btn btn-sm btn-primary">DDF Request</button>
+              <button *ngIf="loading" class="btn btn-sm btn-warning"><span class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> Loading...</button>
+          </div>
+      </div>
+       <div class="input-group">
+          <h4><small>Load data from file <a (click)="fileLoadVisible = !fileLoadVisible" href="#"><span class="label label-danger">{{fileLoadVisible ? '-' : '+'}}</span></a></small></h4>
+          <input *ngIf="fileLoadVisible" type='file' class="form-control" accept='text/json' (change)='openFile($event)'>
       </div>
 
       <div class="input-group o7">
@@ -15,8 +25,41 @@
       </ul><br>
     </div>
 
-    <div class="col-sm-9">
-      <table class="table table-bordered o7">
+    <div *ngIf="currentTest && currentTest.diagnostic" class="col-sm-9">
+      <ul class="nav nav-tabs">
+        <li class="active"><a href="#0" data-toggle="tab">Summary</a></li>
+        <li *ngFor="let query of subQueries; let i = index"><a href="#{{i+1}}" data-toggle="tab">Query {{i+1}}</a></li>
+      </ul>
+      <div class="tab-content" style="overflow-y: auto; height: 150px; margin-bottom: 7px;">
+        <div class="tab-pane active" id="0">
+          <h4>Total reader time: <span class="glyphicon glyphicon-time label label-primary"> {{totalTime}} ms</span></h4>
+          <h4>Files loading time:</h4>
+          <div *ngFor="let item of fileStatistics | keyvalue">{{item.key}} <span class="glyphicon glyphicon-time label label-primary"> {{item.value}} ms</span></div>
+        </div>
+        <div *ngFor="let query of subQueries; let i = index" class="tab-pane" id="{{i+1}}">
+          <div [innerHTML]="subQueries[i]"></div>
+          <div>
+            <div>
+                Total data loading: <span class="glyphicon glyphicon-time label label-primary">{{subQueriesInfo[i].dataLoading}} ms</span>
+            </div>
+            <div>
+                Data tables processing: <span class="glyphicon glyphicon-time label label-primary">{{subQueriesInfo[i].dataTablesProcessing}} ms</span>
+            </div>
+            <div>
+                Result processing: <span class="glyphicon glyphicon-time label label-primary">{{subQueriesInfo[i].queryResultProcessing}} ms</span>
+            </div>
+            <div>
+                Result ordering: <span class="glyphicon glyphicon-time label label-primary">{{subQueriesInfo[i].resultOrdering}} ms</span>
+            </div>
+            <h4>Resources:</h4>
+            <ul>
+               <li *ngFor="let resource of resourcesInfo[i]">{{resource.path}}</li>
+            </ul>
+          </div>
+        </div>
+     </div>
+
+     <table class="table table-bordered o7">
           <thead>
             <tr>
               <th scope="col">Message</th>
@@ -25,7 +68,7 @@
             </tr>
           </thead>
           <tbody *ngIf="!!currentTest">
-            <tr *ngFor="let r of currentTest.diagnostic">
+            <tr *ngFor="let r of currentTest.diagnostic" [ngStyle]="{'background-color': r.level === 'error' || r.level === 'fatal' ? '#ff9292' : '#fff'}">
               <td>{{r.message}} <span class="glyphicon glyphicon-time label label-primary"> {{r.time}}</span></td>
               <td>{{r.funName}}</td>
               <td>{{r.module}}@{{r.version}} <span *ngIf="!!r.attachment" (click)="details(r)" class="label label-success">Details...</span></td>
@@ -49,62 +92,6 @@
         </div>
       </div>
     </div>
-      <!--<h4><small>RECENT POSTS</small></h4>
-      <hr>
-      <h2>I Love Food</h2>
-      <h5><span class="glyphicon glyphicon-time"></span> Post by Jane Dane, Sep 27, 2015.</h5>
-      <h5><span class="label label-danger">Food</span> <span class="label label-primary">Ipsum</span></h5><br>
-      <p>Food is my passion. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-      <br><br>
-
-      <h4><small>RECENT POSTS</small></h4>
-      <hr>
-      <h2>Officially Blogging</h2>
-      <h5><span class="glyphicon glyphicon-time"></span> Post by John Doe, Sep 24, 2015.</h5>
-      <h5><span class="label label-success">Lorem</span></h5><br>
-      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-      <hr>
-
-      <h4>Leave a Comment:</h4>
-      <form role="form">
-        <div class="form-group">
-          <textarea class="form-control" rows="3" required></textarea>
-        </div>
-        <button type="submit" class="btn btn-success">Submit</button>
-      </form>
-      <br><br>
-
-      <p><span class="badge">2</span> Comments:</p><br>
-
-      <div class="row">
-        <div class="col-sm-2 text-center">
-          <img src="bandmember.jpg" class="img-circle" height="65" width="65" alt="Avatar">
-        </div>
-        <div class="col-sm-10">
-          <h4>Anja <small>Sep 29, 2015, 9:12 PM</small></h4>
-          <p>Keep up the GREAT work! I am cheering for you!! Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-          <br>
-        </div>
-        <div class="col-sm-2 text-center">
-          <img src="bird.jpg" class="img-circle" height="65" width="65" alt="Avatar">
-        </div>
-        <div class="col-sm-10">
-          <h4>John Row <small>Sep 25, 2015, 8:25 PM</small></h4>
-          <p>I am so happy for you man! Finally. I am looking forward to read about your trendy life. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-          <br>
-          <p><span class="badge">1</span> Comment:</p><br>
-          <div class="row">
-            <div class="col-sm-2 text-center">
-              <img src="bird.jpg" class="img-circle" height="65" width="65" alt="Avatar">
-            </div>
-            <div class="col-xs-10">
-              <h4>Nested Bro <small>Sep 25, 2015, 8:28 PM</small></h4>
-              <p>Me too! WOW!</p>
-              <br>
-            </div>
-          </div>
-        </div>
-      </div>-->
     </div>
   </div>
 </div>
